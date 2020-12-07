@@ -6,3 +6,8 @@ variable "nb_instance" {}
 variable "vm_name" {}
 
 variable "vm_template_name" {}
+
+variable "num_cpus" {}
+variable "memory" {}
+
+variable "env" {}

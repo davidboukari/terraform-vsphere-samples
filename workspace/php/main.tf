@@ -36,44 +36,54 @@ data "vsphere_virtual_machine" "template" {
   datacenter_id = data.vsphere_datacenter.dc.id
 }
 
-resource "vsphere_virtual_machine" "vm" {
-  count = var.nb_instance
-  name             = "${var.vm_name}-${terraform.workspace}-${count.index}"
+module "vsphere_virtual_machine_vm" {
+  nb_instance = "${var.nb_instance}"
+  vm_name = "${var.vm_name}"
+  env = "${terraform.workspace}"
   resource_pool_id = data.vsphere_resource_pool.pool.id
-  #resource_pool_id = data.vsphere_compute_cluster.cluster.resource_pool_id
   datastore_id     = data.vsphere_datastore.datastore.id
-
-  num_cpus = 2
-  memory   = 1024
-  #guest_id = "other3xLinux64Guest"
-  #guest_id = "otherlinuxguest"
+  num_cpus = "${var.num_cpus}"
+  memory = "${var.memory}"
   guest_id = data.vsphere_virtual_machine.template.guest_id
-  #guest_id = "otherLinux64Guest"
-
-  network_interface {
-    network_id = data.vsphere_network.network.id
-    #adapter_type = "vmxnet3"
-    adapter_type = data.vsphere_virtual_machine.template.network_interface_types[0]
-  }
-
-  disk {
-    label = "disk0"
-    size  = 20
-  }
-
-  clone {
-    template_uuid = data.vsphere_virtual_machine.template.id
-    customize {
-      linux_options {
-        #domain    = "consul.internal"
-        #host_name = "${local.name}-${count.index + 1}"
-        domain    = "vsphere.local"
-        host_name = "${var.vm_name}-${terraform.workspace}-${count.index}"
-      }
-      // To use DHCP, declare an empty network_interface block for each configured interface.
-      network_interface {}
-    }
+  network_id = data.vsphere_network.network.id
+  adapter_type = data.vsphere_virtual_machine.template.network_interface_types[0]
+  template_id =   data.vsphere_virtual_machine.template.id
+  network_interface_types =   data.vsphere_virtual_machine.template.network_interface_types[0]
+  source = "./modules/vsphere_virtual_machine/vm"
   
-  }
-
 }
+
+#resource "vsphere_virtual_machine" "vm" {
+#  count = var.nb_instance
+#  name             = "${var.vm_name}-${terraform.workspace}-${count.index}"
+#  resource_pool_id = data.vsphere_resource_pool.pool.id
+#  #resource_pool_id = data.vsphere_compute_cluster.cluster.resource_pool_id
+#  datastore_id     = data.vsphere_datastore.datastore.id
+#
+#  num_cpus = 2
+#  memory   = 1024
+#  guest_id = data.vsphere_virtual_machine.template.guest_id
+#
+#  network_interface {
+#    network_id = data.vsphere_network.network.id
+#    adapter_type = data.vsphere_virtual_machine.template.network_interface_types[0]
+#  }
+#
+#  disk {
+#    label = "disk0"
+#    size  = 20
+#  }
+#
+#  clone {
+#    template_uuid = data.vsphere_virtual_machine.template.id
+#    customize {
+#      linux_options {
+#        domain    = "vsphere.local"
+#        host_name = "${var.vm_name}-${terraform.workspace}-${count.index}"
+#      }
+#      // To use DHCP, declare an empty network_interface block for each configured interface.
+#      network_interface {}
+#    }
+#  
+#  }
+#}
